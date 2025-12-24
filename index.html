@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý CLB Pickleball - Tính Tiền</title>
+    <style>
+        :root {
+            --color-primary: #208791;
+            --color-primary-hover: #186e7e;
+            --color-primary-active: #157170;
+            --color-text: #134252;
+            --color-text-secondary: #626c7c;
+            --color-bg: #fcfcf9;
+            --color-surface: #fffffe;
+            --color-border: rgba(94, 82, 64, 0.2);
+            --color-success: #22c75a;
+            --color-error: #c0152f;
+            --color-warning: #a84b2f;
+            --color-green: #22c75a;
+            --color-red: #ff5459;
+            --radius: 8px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            padding: 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--color-primary);
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        header p {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--color-border);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 150ms;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--color-text);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--color-text);
+            background: var(--color-surface);
+            transition: border-color 150ms;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(32, 135, 145, 0.15);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 150ms;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn:active {
+            background: var(--color-primary-active);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        .btn-win {
+            background: var(--color-green);
+        }
+
+        .btn-win:hover {
+            background: #1ba84d;
+        }
+
+        .btn-lose {
+            background: var(--color-red);
+        }
+
+        .btn-lose:hover {
+            background: #e63541;
+        }
+
+        .btn-secondary {
+            background: #626c7c;
+        }
+
+        .btn-secondary:hover {
+            background: #525762;
+        }
+
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .match-item {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-info {
+            flex: 1;
+        }
+
+        .match-players {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .match-score {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .delete-btn {
+            background: var(--color-error);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 150ms;
+        }
+
+        .delete-btn:hover {
+            background: #a0121f;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            box-shadow: var(--shadow-sm);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .ranking-table thead {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .ranking-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .ranking-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 14px;
+        }
+
+        .ranking-table tbody tr {
+            background: var(--color-surface);
+            transition: background 150ms;
+        }
+
+        .ranking-table tbody tr:hover {
+            background: rgba(32, 135, 145, 0.05);
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .rank-1 {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .rank-2 {
+            background: #c0c0c0;
+            color: #333;
+        }
+
+        .rank-3 {
+            background: #cd7f32;
+            color: white;
+        }
+
+        .win {
+            color: var(--color-success);
+            font-weight: 600;
+        }
+
+        .loss {
+            color: var(--color-error);
+            font-weight: 600;
+        }
+
+        .money {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .money.positive {
+            color: var(--color-success);
+        }
+
+        .money.negative {
+            color: var(--color-error);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state p {
+            margin: 0;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .message.success {
+            display: block;
+            background: rgba(34, 199, 90, 0.1);
+            color: #1a8a3a;
+            border: 1px solid rgba(34, 199, 90, 0.3);
+        }
+
+        .message.error {
+            display: block;
+            background: rgba(192, 21, 47, 0.1);
+            color: #a0121f;
+            border: 1px solid rgba(192, 21, 47, 0.3);
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .row .form-group {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 16px;
+            margin-bottom: 12px;
+            color: var(--color-text);
+        }
+
+        h3 {
+            font-size: 16px;
+            color: var(--color-text);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏓 Quản Lý CLB Pickleball</h1>
+            <p>Tính tiền theo kết quả trận đấu</p>
+        </header>
+
+        <div class="message" id="message"></div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'setup')">⚙️ Thiết Lập</button>
+            <button class="tab-btn" onclick="switchTab(event, 'schedule')">📅 Lịch Sinh Hoạt</button>
+            <button class="tab-btn" onclick="switchTab(event, 'matches')">🎾 Trận Đấu</button>
+            <button class="tab-btn" onclick="switchTab(event, 'ranking')">🏆 Xếp Hạng</button>
+            <button class="tab-btn" onclick="switchTab(event, 'history')">📜 Lịch Sử</button>
+            <button class="tab-btn" onclick="switchTab(event, 'backup')">💾 Backup</button>
+        </div>
+
+        <!-- Tab Thiết Lập -->
+        <div id="setup" class="tab-content active">
+            <h2>Danh Sách CLB</h2>
+            <div class="form-group">
+                <label for="clubList">Danh Sách VĐV CLB (mỗi dòng một tên)</label>
+                <textarea id="clubList" placeholder="Sơn Tùng&#10;Quang Minh&#10;Tùng Pick&#10;Tùng Linh"></textarea>
+            </div>
+            <button class="btn" onclick="saveClubList()">💾 Lưu Danh Sách CLB</button>
+
+            <h2 style="margin-top: 24px;">Danh Sách Khách</h2>
+            <div class="form-group">
+                <label for="guestList">Danh Sách VĐV Khách (mỗi dòng một tên)</label>
+                <textarea id="guestList" placeholder="VĐV Khách 1&#10;VĐV Khách 2&#10;VĐV Khách 3"></textarea>
+            </div>
+            <button class="btn" onclick="saveGuestList()">💾 Lưu Danh Sách Khách</button>
+
+            <div class="info-text" style="margin-top: 20px;">
+                ✓ Lưu danh sách để sử dụng khi nhập kết quả trận đấu
+            </div>
+        </div>
+
+        <!-- Tab Lịch Sinh Hoạt -->
+        <div id="schedule" class="tab-content">
+            <h2>Quản Lý Lịch Sinh Hoạt</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label for="scheduleDate">Ngày Sinh Hoạt</label>
+                    <input type="date" id="scheduleDate">
+                </div>
+                <div class="form-group">
+                    <label for="scheduleNote">Ghi Chú (tùy chọn)</label>
+                    <input type="text" id="scheduleNote" placeholder="Ví dụ: Vòng 1, Bán kết...">
+                </div>
+            </div>
+            <button class="btn" onclick="addSchedule()">➕ Thêm Ngày Sinh Hoạt</button>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Danh Sách Sinh Hoạt</h3>
+            <div class="match-list" id="scheduleList"></div>
+        </div>
+
+        <!-- Tab Trận Đấu -->
+        <div id="matches" class="tab-content">
+            <div class="form-group">
+                <label for="eventDate">Chọn Ngày Sinh Hoạt</label>
+                <select id="eventDate" onchange="updateMatchList()">
+                    <option value="">-- Chọn ngày --</option>
+                </select>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Cặp 1</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label for="pair1vdv1">VĐV 1</label>
+                    <select id="pair1vdv1">
+                        <option value="">-- Chọn --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pair1vdv2">VĐV 2</label>
+                    <select id="pair1vdv2">
+                        <option value="">-- Chọn --</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Cặp 2</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label for="pair2vdv1">VĐV 1</label>
+                    <select id="pair2vdv1">
+                        <option value="">-- Chọn --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pair2vdv2">VĐV 2</label>
+                    <select id="pair2vdv2">
+                        <option value="">-- Chọn --</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 12px;">Điểm Số</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label for="pairScore1">Điểm Cặp 1</label>
+                    <input type="number" id="pairScore1" placeholder="15" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="pairScore2">Điểm Cặp 2</label>
+                    <input type="number" id="pairScore2" placeholder="10" min="0">
+                </div>
+            </div>
+
+            <button class="btn" onclick="addDoublesMatch()">➕ Thêm Trận Đôi</button>
+
+            <h3 style="margin-top: 24px; margin-bottom: 12px;">Các Trận Đấu Hôm Nay</h3>
+            <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 12px; margin-bottom: 16px; text-align: center;">
+                <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px;">Tổng Tiền Hôm Nay</div>
+                <div style="font-size: 28px; font-weight: 600; color: var(--color-primary);" id="dailyTotal">0k</div>
+            </div>
+            <div class="match-list" id="matchList"></div>
+        </div>
+
+        <!-- Tab Xếp Hạng -->
+        <div id="ranking" class="tab-content">
+            <div class="summary" id="summary"></div>
+            <table class="ranking-table" id="rankingTable">
+                <thead>
+                    <tr>
+                        <th>Hạng</th>
+                        <th>Tên VĐV</th>
+                        <th>Thắng/Thua</th>
+                        <th>Tiền (k)</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingBody">
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <p>Chưa có dữ liệu. Hãy nhập kết quả trận đấu!</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab Lịch Sử -->
+        <div id="history" class="tab-content">
+            <div id="historyList"></div>
+        </div>
+
+        <!-- Tab Backup -->
+        <div id="backup" class="tab-content">
+            <h2>📥 Tải Về Dữ Liệu</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 16px;">Tải toàn bộ dữ liệu dưới dạng file JSON để backup hoặc chia sẻ cho người khác</p>
+            <button class="btn" style="background: #22c75a;" onclick="exportData()">📥 Tải Về Dữ Liệu (JSON)</button>
+
+            <h2 style="margin-top: 32px;">📤 Khôi Phục Dữ Liệu</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 16px;">Chọn file JSON đã lưu trước đây để khôi phục dữ liệu</p>
+            <div class="form-group">
+                <label for="importFile">Chọn File JSON</label>
+                <input type="file" id="importFile" accept=".json">
+            </div>
+            <button class="btn" onclick="importData()">📤 Khôi Phục Dữ Liệu</button>
+
+            <h2 style="margin-top: 32px;">🗑️ Xóa Tất Cả</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 16px;">⚠️ Xóa toàn bộ dữ liệu (không thể hoàn tác)</p>
+            <button class="btn" style="background: #c0152f;" onclick="clearAllData()">🗑️ Xóa Tất Cả Dữ Liệu</button>
+
+            <div class="info-text" style="margin-top: 20px; background: rgba(34, 199, 90, 0.1); padding: 12px; border-radius: 8px;">
+                ✓ Dữ liệu được lưu trên máy tính của bạn (Browser Storage)
+                <br>✓ 100% offline - không cần internet
+                <br>✓ Không ai có thể truy cập dữ liệu của bạn
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let clubList = JSON.parse(localStorage.getItem('clubList')) || [];
+        let guestList = JSON.parse(localStorage.getItem('guestList')) || [];
+        let allMatches = JSON.parse(localStorage.getItem('allMatches')) || [];
+        let scheduleList = JSON.parse(localStorage.getItem('scheduleList')) || [];
+
+        loadPlayerSelects();
+        loadSchedules();
+
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'ranking') {
+                updateRanking();
+            } else if (tabName === 'history') {
+                updateHistory();
+            } else if (tabName === 'matches') {
+                updateMatchList();
+            }
+        }
+
+        function saveClubList() {
+            const list = document.getElementById('clubList').value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+
+            if (list.length === 0) {
+                showMessage('Vui lòng nhập danh sách VĐV', 'error');
+                return;
+            }
+
+            clubList = list;
+            localStorage.setItem('clubList', JSON.stringify(clubList));
+            showMessage('✓ Đã lưu danh sách CLB', 'success');
+            loadPlayerSelects();
+        }
+
+        function saveGuestList() {
+            const list = document.getElementById('guestList').value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+
+            if (list.length === 0) {
+                showMessage('Vui lòng nhập danh sách khách', 'error');
+                return;
+            }
+
+            guestList = list;
+            localStorage.setItem('guestList', JSON.stringify(guestList));
+            showMessage('✓ Đã lưu danh sách khách', 'success');
+            loadPlayerSelects();
+        }
+
+        function loadPlayerSelects() {
+            const allPlayers = [...clubList, ...guestList];
+            const selects = ['pair1vdv1', 'pair1vdv2', 'pair2vdv1', 'pair2vdv2'];
+            const selectedValues = {};
+
+            selects.forEach(id => {
+                const elem = document.getElementById(id);
+                selectedValues[id] = elem.value;
+                elem.innerHTML = '<option value="">-- Chọn --</option>';
+                allPlayers.forEach(player => {
+                    elem.innerHTML += `<option value="${player}">${player}</option>`;
+                });
+                if (selectedValues[id]) elem.value = selectedValues[id];
+            });
+        }
+
+        function loadSchedules() {
+            const eventDateSelect = document.getElementById('eventDate');
+            const selectedDate = eventDateSelect.value;
+
+            eventDateSelect.innerHTML = '<option value="">-- Chọn ngày --</option>';
+            scheduleList.forEach(schedule => {
+                const dateStr = new Date(schedule.date).toLocaleDateString('vi-VN');
+                const note = schedule.note ? ` (${schedule.note})` : '';
+                eventDateSelect.innerHTML += `<option value="${schedule.date}">${dateStr}${note}</option>`;
+            });
+
+            if (selectedDate) eventDateSelect.value = selectedDate;
+            updateScheduleList();
+        }
+
+        function addSchedule() {
+            const date = document.getElementById('scheduleDate').value;
+            const note = document.getElementById('scheduleNote').value.trim();
+
+            if (!date) {
+                showMessage('Vui lòng chọn ngày', 'error');
+                return;
+            }
+
+            const exists = scheduleList.some(s => s.date === date);
+            if (exists) {
+                showMessage('Ngày này đã có trong lịch', 'error');
+                return;
+            }
+
+            scheduleList.push({ date, note, id: Date.now() });
+            scheduleList.sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('scheduleList', JSON.stringify(scheduleList));
+
+            showMessage('✓ Đã thêm ngày sinh hoạt', 'success');
+            document.getElementById('scheduleDate').value = '';
+            document.getElementById('scheduleNote').value = '';
+            loadSchedules();
+        }
+
+        function deleteSchedule(id) {
+            if (confirm('Xóa ngày sinh hoạt này?')) {
+                scheduleList = scheduleList.filter(s => s.id !== id);
+                localStorage.setItem('scheduleList', JSON.stringify(scheduleList));
+                loadSchedules();
+                showMessage('Đã xóa ngày sinh hoạt', 'success');
+            }
+        }
+
+        function updateScheduleList() {
+            const scheduleListDiv = document.getElementById('scheduleList');
+            if (scheduleList.length === 0) {
+                scheduleListDiv.innerHTML = '<div class="empty-state"><p>Chưa có lịch sinh hoạt</p></div>';
+                return;
+            }
+
+            scheduleListDiv.innerHTML = scheduleList.map(schedule => {
+                const dateStr = new Date(schedule.date).toLocaleDateString('vi-VN');
+                const matches = allMatches.filter(m => m.date === schedule.date).length;
+                return `
+                    <div class="match-item">
+                        <div class="match-info">
+                            <div class="match-players"><strong>${dateStr}</strong></div>
+                            <div class="match-score">${schedule.note || 'Không có ghi chú'} • ${matches} trận</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteSchedule(${schedule.id})">Xóa</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addDoublesMatch() {
+            const pair1vdv1 = document.getElementById('pair1vdv1').value;
+            const pair1vdv2 = document.getElementById('pair1vdv2').value;
+            const pair2vdv1 = document.getElementById('pair2vdv1').value;
+            const pair2vdv2 = document.getElementById('pair2vdv2').value;
+            const score1 = parseInt(document.getElementById('pairScore1').value) || 0;
+            const score2 = parseInt(document.getElementById('pairScore2').value) || 0;
+            const eventDate = document.getElementById('eventDate').value;
+
+            if (!pair1vdv1 || !pair1vdv2 || !pair2vdv1 || !pair2vdv2) {
+                showMessage('Vui lòng chọn đủ 4 VĐV', 'error');
+                return;
+            }
+
+            const allVdv = [pair1vdv1, pair1vdv2, pair2vdv1, pair2vdv2];
+            if (new Set(allVdv).size !== 4) {
+                showMessage('Các VĐV không được trùng nhau', 'error');
+                return;
+            }
+
+            if (score1 === 0 && score2 === 0) {
+                showMessage('Vui lòng nhập điểm số', 'error');
+                return;
+            }
+
+            if (!eventDate) {
+                showMessage('Vui lòng chọn ngày sinh hoạt', 'error');
+                return;
+            }
+
+            const match = {
+                id: Date.now(),
+                pair1: [pair1vdv1, pair1vdv2],
+                pair2: [pair2vdv1, pair2vdv2],
+                score1: score1,
+                score2: score2,
+                date: eventDate,
+                result1: score1 > score2 ? 'win' : 'lose',
+                result2: score2 > score1 ? 'win' : 'lose'
+            };
+
+            allMatches.push(match);
+            localStorage.setItem('allMatches', JSON.stringify(allMatches));
+
+            showMessage(`✓ Thêm trận: (${pair1vdv1}+${pair1vdv2}) ${score1} - ${score2} (${pair2vdv1}+${pair2vdv2})`, 'success');
+
+            document.getElementById('pairScore1').value = '';
+            document.getElementById('pairScore2').value = '';
+            document.getElementById('pair1vdv1').value = '';
+            document.getElementById('pair1vdv2').value = '';
+            document.getElementById('pair2vdv1').value = '';
+            document.getElementById('pair2vdv2').value = '';
+
+            updateMatchList();
+            updateRanking();
+        }
+
+        function updateMatchList() {
+            const eventDate = document.getElementById('eventDate').value;
+            const todayMatches = allMatches.filter(m => m.date === eventDate).reverse();
+
+            const matchList = document.getElementById('matchList');
+            const dailyTotalDiv = document.getElementById('dailyTotal');
+
+            if (todayMatches.length === 0) {
+                matchList.innerHTML = '<div class="empty-state"><p>Chưa có trận đấu hôm nay</p></div>';
+                dailyTotalDiv.textContent = '0k';
+                return;
+            }
+
+            const dailyMoney = {};
+            todayMatches.forEach(match => {
+                if (match.pair1) {
+                    const winners = match.result1 === 'win' ? match.pair1 : match.pair2;
+                    const losers = match.result1 === 'win' ? match.pair2 : match.pair1;
+                    winners.forEach(vdv => {
+                        dailyMoney[vdv] = (dailyMoney[vdv] || 0) + 50000;
+                    });
+                    losers.forEach(vdv => {
+                        dailyMoney[vdv] = (dailyMoney[vdv] || 0) - 50000;
+                    });
+                }
+            });
+
+            const totalToday = Object.values(dailyMoney).reduce((a, b) => a + b, 0);
+            dailyTotalDiv.textContent = totalToday >= 0 ? `+${(totalToday / 1000).toFixed(0)}k` : `${(totalToday / 1000).toFixed(0)}k`;
+
+            matchList.innerHTML = todayMatches.map(match => {
+                if (match.pair1) {
+                    const result1 = match.result1 === 'win' ? '✓ Thắng' : '✗ Thua';
+                    const result2 = match.result2 === 'win' ? '✓ Thắng' : '✗ Thua';
+                    return `
+                        <div class="match-item">
+                            <div class="match-info">
+                                <div class="match-players">(${match.pair1[0]}+${match.pair1[1]}) <strong>${match.score1}</strong> <span style="color: #626c7c;">vs</span> <strong>${match.score2}</strong> (${match.pair2[0]}+${match.pair2[1]})</div>
+                                <div class="match-score">
+                                    <span class="${match.result1 === 'win' ? 'win' : 'loss'}">${result1}</span>
+                                    <span style="color: #626c7c;"> / </span>
+                                    <span class="${match.result2 === 'win' ? 'win' : 'loss'}">${result2}</span>
+                                </div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteMatch(${match.id})">Xóa</button>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+        }
+
+        function deleteMatch(id) {
+            if (confirm('Xóa trận đấu này?')) {
+                allMatches = allMatches.filter(m => m.id !== id);
+                localStorage.setItem('allMatches', JSON.stringify(allMatches));
+                updateMatchList();
+                updateRanking();
+                updateHistory();
+                showMessage('Đã xóa trận đấu', 'success');
+            }
+        }
+
+        function updateRanking() {
+            const stats = {};
+
+            allMatches.forEach(match => {
+                if (match.pair1) {
+                    match.pair1.forEach(vdv => {
+                        if (!stats[vdv]) stats[vdv] = { wins: 0, losses: 0, money: 0 };
+                    });
+                    match.pair2.forEach(vdv => {
+                        if (!stats[vdv]) stats[vdv] = { wins: 0, losses: 0, money: 0 };
+                    });
+
+                    if (match.result1 === 'win') {
+                        match.pair1.forEach(vdv => {
+                            stats[vdv].wins++;
+                            stats[vdv].money += 50000;
+                        });
+                        match.pair2.forEach(vdv => {
+                            stats[vdv].losses++;
+                            stats[vdv].money -= 50000;
+                        });
+                    } else {
+                        match.pair2.forEach(vdv => {
+                            stats[vdv].wins++;
+                            stats[vdv].money += 50000;
+                        });
+                        match.pair1.forEach(vdv => {
+                            stats[vdv].losses++;
+                            stats[vdv].money -= 50000;
+                        });
+                    }
+                }
+            });
+
+            const ranking = Object.entries(stats)
+                .map(([player, data]) => ({ player, ...data }))
+                .sort((a, b) => b.money - a.money);
+
+            const summary = document.getElementById('summary');
+            if (ranking.length > 0) {
+                const topPlayer = ranking[0];
+                const totalMatches = allMatches.length;
+                summary.innerHTML = `
+                    <div class="summary-card">
+                        <div class="summary-label">Tổng Trận</div>
+                        <div class="summary-value">${totalMatches}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Dẫn Đầu</div>
+                        <div class="summary-value">${topPlayer.player.split(' ').pop()}</div>
+                    </div>
+                `;
+            }
+
+            const tbody = document.getElementById('rankingBody');
+            if (ranking.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <p>Chưa có dữ liệu</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = ranking.map((stat, index) => {
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                const moneyClass = stat.money >= 0 ? 'positive' : 'negative';
+                return `
+                    <tr>
+                        <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
+                        <td><strong>${stat.player}</strong></td>
+                        <td>
+                            <span class="win">${stat.wins}W</span>
+                            <span style="color: #626c7c;">/</span>
+                            <span class="loss">${stat.losses}L</span>
+                        </td>
+                        <td>
+                            <span class="money ${moneyClass}">
+                                ${stat.money >= 0 ? '+' : ''}${(stat.money / 1000).toFixed(0)}k
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateHistory() {
+            const sortedMatches = [...allMatches].reverse();
+
+            const historyList = document.getElementById('historyList');
+            if (sortedMatches.length === 0) {
+                historyList.innerHTML = '<div class="empty-state"><p>Chưa có lịch sử trận đấu</p></div>';
+                return;
+            }
+
+            historyList.innerHTML = sortedMatches.map(match => {
+                const dateStr = new Date(match.date).toLocaleDateString('vi-VN');
+                if (match.pair1) {
+                    const result1 = match.result1 === 'win' ? '✓ Thắng' : '✗ Thua';
+                    const result2 = match.result2 === 'win' ? '✓ Thắng' : '✗ Thua';
+                    return `
+                        <div class="match-item">
+                            <div class="match-info">
+                                <div class="match-date" style="font-size: 12px; color: var(--color-text-secondary);">${dateStr}</div>
+                                <div class="match-players">(${match.pair1[0]}+${match.pair1[1]}) ${match.score1} <span style="color: #626c7c;">vs</span> ${match.score2} (${match.pair2[0]}+${match.pair2[1]})</div>
+                                <div class="match-score">
+                                    <span class="${match.result1 === 'win' ? 'win' : 'loss'}">${result1}</span>
+                                    <span style="color: #626c7c;"> / </span>
+                                    <span class="${match.result2 === 'win' ? 'win' : 'loss'}">${result2}</span>
+                                </div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteMatch(${match.id})">Xóa</button>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+        }
+
+        function exportData() {
+            const data = {
+                clubList,
+                guestList,
+                allMatches,
+                scheduleList,
+                exportDate: new Date().toLocaleString('vi-VN')
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `pickleball-backup-${new Date().getTime()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showMessage('✓ Đã tải về dữ liệu', 'success');
+        }
+
+        function importData() {
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('Vui lòng chọn file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    clubList = data.clubList || [];
+                    guestList = data.guestList || [];
+                    allMatches = data.allMatches || [];
+                    scheduleList = data.scheduleList || [];
+
+                    localStorage.setItem('clubList', JSON.stringify(clubList));
+                    localStorage.setItem('guestList', JSON.stringify(guestList));
+                    localStorage.setItem('allMatches', JSON.stringify(allMatches));
+                    localStorage.setItem('scheduleList', JSON.stringify(scheduleList));
+
+                    fileInput.value = '';
+                    loadPlayerSelects();
+                    loadSchedules();
+                    updateRanking();
+
+                    showMessage('✓ Đã khôi phục dữ liệu thành công', 'success');
+                } catch (error) {
+                    showMessage('❌ File không hợp lệ', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ Bạn chắc chắn muốn xóa TẤT CẢ dữ liệu? Hành động này không thể hoàn tác!')) {
+                if (confirm('Xác nhận xóa lần cuối?')) {
+                    localStorage.clear();
+                    clubList = [];
+                    guestList = [];
+                    allMatches = [];
+                    scheduleList = [];
+                    
+                    document.getElementById('clubList').value = '';
+                    document.getElementById('guestList').value = '';
+                    document.getElementById('importFile').value = '';
+                    
+                    loadPlayerSelects();
+                    loadSchedules();
+                    updateRanking();
+                    
+                    showMessage('✓ Đã xóa tất cả dữ liệu', 'success');
+                }
+            }
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 3000);
+        }
+
+        updateRanking();
+    </script>
+</body>
+</html>
