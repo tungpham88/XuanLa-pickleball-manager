@@ -152,41 +152,6 @@
             background: var(--color-primary-active);
         }
 
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .btn-group .btn {
-            flex: 1;
-            margin-top: 0;
-        }
-
-        .btn-win {
-            background: var(--color-green);
-        }
-
-        .btn-win:hover {
-            background: #1ba84d;
-        }
-
-        .btn-lose {
-            background: var(--color-red);
-        }
-
-        .btn-lose:hover {
-            background: #e63541;
-        }
-
-        .btn-secondary {
-            background: #626c7c;
-        }
-
-        .btn-secondary:hover {
-            background: #525762;
-        }
-
         .match-list {
             display: flex;
             flex-direction: column;
@@ -407,6 +372,15 @@
             font-size: 16px;
             color: var(--color-text);
         }
+
+        .badge-inactive {
+            background: #ccc;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -422,7 +396,8 @@
             <button class="tab-btn active" onclick="switchTab(event, 'setup')">⚙️ Thiết Lập</button>
             <button class="tab-btn" onclick="switchTab(event, 'schedule')">📅 Lịch Sinh Hoạt</button>
             <button class="tab-btn" onclick="switchTab(event, 'matches')">🎾 Trận Đấu</button>
-            <button class="tab-btn" onclick="switchTab(event, 'ranking')">🏆 Xếp Hạng</button>
+            <button class="tab-btn" onclick="switchTab(event, 'ranking-money')">💰 BXH Tiền</button>
+            <button class="tab-btn" onclick="switchTab(event, 'ranking-skill')">⭐ BXH Trình Độ</button>
             <button class="tab-btn" onclick="switchTab(event, 'history')">📜 Lịch Sử</button>
             <button class="tab-btn" onclick="switchTab(event, 'backup')">💾 Backup</button>
         </div>
@@ -530,10 +505,10 @@
             <div class="match-list" id="matchList"></div>
         </div>
 
-        <!-- Tab Xếp Hạng -->
-        <div id="ranking" class="tab-content">
+        <!-- Tab BXH Tiền -->
+        <div id="ranking-money" class="tab-content">
             <div class="summary" id="summary"></div>
-            <table class="ranking-table" id="rankingTable">
+            <table class="ranking-table" id="rankingTableMoney">
                 <thead>
                     <tr>
                         <th>Hạng</th>
@@ -542,10 +517,34 @@
                         <th>Tiền (k)</th>
                     </tr>
                 </thead>
-                <tbody id="rankingBody">
+                <tbody id="rankingBodyMoney">
                     <tr>
                         <td colspan="4" class="empty-state">
                             <p>Chưa có dữ liệu. Hãy nhập kết quả trận đấu!</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab BXH Trình Độ -->
+        <div id="ranking-skill" class="tab-content">
+            <div style="background: rgba(34, 199, 90, 0.1); border: 1px solid rgba(34, 199, 90, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                <strong style="color: #1a8a3a;">ℹ️ Ghi chú:</strong> Chỉ hiển thị VĐV đã thi đấu ≥5 trận
+            </div>
+            <table class="ranking-table" id="rankingTableSkill">
+                <thead>
+                    <tr>
+                        <th>Hạng</th>
+                        <th>Tên VĐV</th>
+                        <th>Trận Đấu</th>
+                        <th>Tỉ Lệ Thắng (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingBodySkill">
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <p>Chưa có VĐV thi đấu ≥5 trận</p>
                         </td>
                     </tr>
                 </tbody>
@@ -603,8 +602,10 @@
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
 
-            if (tabName === 'ranking') {
-                updateRanking();
+            if (tabName === 'ranking-money') {
+                updateRankingMoney();
+            } else if (tabName === 'ranking-skill') {
+                updateRankingSkill();
             } else if (tabName === 'history') {
                 updateHistory();
             } else if (tabName === 'matches') {
@@ -787,7 +788,8 @@
             document.getElementById('pair2vdv2').value = '';
 
             updateMatchList();
-            updateRanking();
+            updateRankingMoney();
+            updateRankingSkill();
         }
 
         function updateMatchList() {
@@ -847,13 +849,14 @@
                 allMatches = allMatches.filter(m => m.id !== id);
                 localStorage.setItem('allMatches', JSON.stringify(allMatches));
                 updateMatchList();
-                updateRanking();
+                updateRankingMoney();
+                updateRankingSkill();
                 updateHistory();
                 showMessage('Đã xóa trận đấu', 'success');
             }
         }
 
-        function updateRanking() {
+        function updateRankingMoney() {
             const stats = {};
 
             allMatches.forEach(match => {
@@ -907,7 +910,7 @@
                 `;
             }
 
-            const tbody = document.getElementById('rankingBody');
+            const tbody = document.getElementById('rankingBodyMoney');
             if (ranking.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -935,6 +938,82 @@
                             <span class="money ${moneyClass}">
                                 ${stat.money >= 0 ? '+' : ''}${(stat.money / 1000).toFixed(0)}k
                             </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateRankingSkill() {
+            const stats = {};
+
+            allMatches.forEach(match => {
+                if (match.pair1) {
+                    match.pair1.forEach(vdv => {
+                        if (!stats[vdv]) stats[vdv] = { wins: 0, losses: 0, total: 0 };
+                    });
+                    match.pair2.forEach(vdv => {
+                        if (!stats[vdv]) stats[vdv] = { wins: 0, losses: 0, total: 0 };
+                    });
+
+                    if (match.result1 === 'win') {
+                        match.pair1.forEach(vdv => {
+                            stats[vdv].wins++;
+                            stats[vdv].total++;
+                        });
+                        match.pair2.forEach(vdv => {
+                            stats[vdv].losses++;
+                            stats[vdv].total++;
+                        });
+                    } else {
+                        match.pair2.forEach(vdv => {
+                            stats[vdv].wins++;
+                            stats[vdv].total++;
+                        });
+                        match.pair1.forEach(vdv => {
+                            stats[vdv].losses++;
+                            stats[vdv].total++;
+                        });
+                    }
+                }
+            });
+
+            // Lọc chỉ VĐV ≥5 trận
+            const ranking = Object.entries(stats)
+                .filter(([player, data]) => data.total >= 5)
+                .map(([player, data]) => ({
+                    player,
+                    ...data,
+                    winRate: ((data.wins / data.total) * 100).toFixed(1)
+                }))
+                .sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));
+
+            const tbody = document.getElementById('rankingBodySkill');
+            if (ranking.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <p>Chưa có VĐV thi đấu ≥5 trận</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = ranking.map((stat, index) => {
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                return `
+                    <tr>
+                        <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
+                        <td><strong>${stat.player}</strong></td>
+                        <td>
+                            <span class="win">${stat.wins}W</span>
+                            <span style="color: #626c7c;">/</span>
+                            <span class="loss">${stat.losses}L</span>
+                            <span style="font-size: 12px; color: #626c7c; margin-left: 4px;">(${stat.total} trận)</span>
+                        </td>
+                        <td>
+                            <span style="font-weight: 600; color: var(--color-primary);">${stat.winRate}%</span>
                         </td>
                     </tr>
                 `;
@@ -1023,7 +1102,8 @@
                     fileInput.value = '';
                     loadPlayerSelects();
                     loadSchedules();
-                    updateRanking();
+                    updateRankingMoney();
+                    updateRankingSkill();
 
                     showMessage('✓ Đã khôi phục dữ liệu thành công', 'success');
                 } catch (error) {
@@ -1048,7 +1128,8 @@
                     
                     loadPlayerSelects();
                     loadSchedules();
-                    updateRanking();
+                    updateRankingMoney();
+                    updateRankingSkill();
                     
                     showMessage('✓ Đã xóa tất cả dữ liệu', 'success');
                 }
@@ -1064,7 +1145,8 @@
             }, 3000);
         }
 
-        updateRanking();
+        updateRankingMoney();
+        updateRankingSkill();
     </script>
 </body>
 </html>
